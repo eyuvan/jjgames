@@ -3,72 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>እድል ቢንጎ - Lucky Bingo</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Zema Bingo</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --selected: #e74c3c;
+            --bg: #f8f9fa;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        /* Top Dashboard */
+        .dashboard {
+            background: var(--primary);
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        .timer-badge {
+            background: #e67e22;
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+
+        /* Main Content Container */
+        .container {
+            margin-top: 50px;
+            margin-bottom: 60px;
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        /* Views */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* Card Selection Grid */
+        .cartela-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 10px 0;
+        }
+        /* Taller/Longer box layout as requested */
+        .cartela-box {
+            background: white;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            height: 75px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cartela-box.selected {
+            background-color: var(--selected);
+            color: white;
+            border-color: #c0392b;
+        }
+
+        /* 5x5 Bingo Board View */
+        #game-live-screen {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .called-number-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #f1c40f;
+            margin: 10px 0;
+        }
+        .bingo-board-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .bingo-columns-panel {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            background: #eee;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .column-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .column-header {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        .called-list-num {
+            color: #7f8c8d;
+            margin: 2px 0;
+        }
+        .called-list-num.active {
+            color: var(--selected);
+            font-weight: bold;
+        }
+
+        /* Profile & Wallet Styles */
+        .profile-card, .wallet-card {
+            background: white;
+			padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Bottom Navigation Bar */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            border-top: 1px solid #ddd;
+            z-index: 1000;
+        }
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 15px 0;
+            font-weight: bold;
+            color: #7f8c8d;
+            cursor: pointer;
+        }
+        .nav-item.active {
+            color: var(--primary);
+            border-top: 3px solid var(--primary);
+            background: #f1f2f6;
+        }
+    </style>
 </head>
 <body>
-    <!-- የላይኛው መረጃ እና የላይቭ ስክሪን -->
-    <div class="header-container">
-        <h1>እድል ቢንጎ (Lucky Bingo)</h1>
-        <div id="timer-box">የቀረው ጊዜ: <span id="timer">49</span> ሰከንድ</div>
-        <div id="live-screen">የተጠራ ቁጥር: <span id="called-number">--</span></div>
+
+    <!-- Top Dashboard -->
+    <div class="dashboard">
+        <div>Stake: <span id="top-stake">10</span> ብር</div>
+        <div>Main: <span id="top-main-wallet">0</span> ብr</div>
+        <div>Play: <span id="top-play-wallet">10</span> ብር</div>
+        <div class="timer-badge" id="timer-display">49s</div>
     </div>
 
-    <!-- የቢንጎ 5x5 ካርቴላ ማሳያ -->
-    <div id="selected-cartela-display" class="hidden">
-        <h3>የእርስዎ ካርቴላ (5x5)</h3>
-        <div id="bingo-grid" class="grid-5x5"></div>
-    </div>
-
-    <!-- 1. የጨዋታ ገጽ (Game Tab) -->
-    <div id="game-tab" class="tab-content">
-        <h2>ካርቴላ ይምረጡ (እስከ 5 ካርቴላ)</h2>
-        <div id="cartela-list" class="cartela-container">
-            <!-- 1-600 ቁጥሮች እዚህ ይወጣሉ -->
-        </div>
-    </div>
-
-    <!-- 2. የዋሌት ገጽ (Wallet Tab) -->
-    <div id="wallet-tab" class="tab-content hidden">
-        <h2>የእርስዎ የገንዘብ ቦርሳ (Wallet) 💳</h2>
-        <div class="wallet-box">
-            <div class="wallet-item">
-                <h3>Main Wallet (ዋና ሂሳብ)</h3>
-                <p id="main-wallet-amount">10.00 ብር</p>
+    <!-- Main Views Container -->
+    <div class="container">
+        
+        <!-- GAME VIEW -->
+        <div id="view-game" class="view active">
+            <!-- Stage 1: Card Selection -->
+            <div id="stage-selection">
+                <h3>ካርቴላ ይምረጡ (ከ 1 እስከ 3 ማይሎች ብቻ)</h3>
+                <div class="cartela-selector-grid" id="cartela-grid">
+                    <!-- Cards 1 - 600 generated dynamically -->
+                </div>
             </div>
-            <div class="wallet-item">
-                <h3>Play Wallet (መጫወቻ ሂሳብ)</h3>
-                <p id="play-wallet-amount">0.00 ብር</p>
+
+            <!-- Stage 2: Live Bingo Game Board -->
+            <div id="stage-live" class="view">
+                <div id="game-live-screen">
+                    <div>Game ID: #<span id="live-game-id">0001</span></div>
+                    <div class="called-number-display" id="live-called-num">---</div>
+                    <div>የተጠራ ቁጥር</div>
+                </div>
+
+                <div class="bingo-board-container">
+                    <!-- 5x5 Matrix Grid Display for Chosen Card Placeholder -->
+                    <div id="my-bingo-cards"></div>
+                    
+                    <!-- Called Numbers Board (B-O Columns) -->
+                    <div class="bingo-columns-panel" id="bingo-columns-board">
+                        <!-- Columns will be populated dynamically -->
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- የቴሌብር ብር ማስገቢያ (Deposit) ማሳያ -->
-        <div class="deposit-box">
-            <h3>ገንዘብ ለማስገባት (Deposit)</h3>
-            <p>እባክዎ በቴሌብር (telebirr) ወደዚህ ስልክ ቁጥር ገንዘብ ያስገቡ፡</p>
-            <div class="phone-number">0928361886</div>
-            <small>⚠️ ገንዘብ ካስገቡ በኋላ ደረሰኝ ለሳፖርት ይላኩ።</small>
+        <!-- WALLET VIEW -->
+        <div id="view-wallet" class="view">
+            <div class="wallet-card">
+                <h2>የኪስ ቦርሳ (Wallet)</h2>
+                <div class="info-row"><span>ዋና ሂሳብ (Main Wallet):</span> <strong><span id="wallet-main">0</span> ብር</strong></div>
+                <div class="info-row"><span>የመጫወቻ ሂሳብ (Play Wallet):</span> <strong><span id="wallet-play">10</span> ብር</strong></div>
+            </div>
         </div>
-    </div>
 
-    <!-- 3. የታሪክ ገጽ (History Tab) -->
-    <div id="history-tab" class="tab-content hidden">
-        <h2>የጨዋታ ታሪክ (History) 📜</h2>
-        <p>ምንም አይነት ታሪክ የለም</p>
-    </div>
+        <!-- HISTORY VIEW -->
+        <div id="view-history" class="view">
+            <div class="profile-card">
+                <h2>የጨዋታ ታሪክ (History)</h2>
+                <p>የተጫወቷቸው ጨዋታዎች ዝርዝር እዚህ ይታያል...</p>
+            </div>
+        </div>
 
-    <!-- 4. የፕሮፋይል ገጽ (Profile Tab) -->
-    <div id="profile-tab" class="tab-content hidden">
-        <h2>የአባልነት መገለጫ (Profile) 👤</h2>
-        <p>የተጠቃሚ መረጃ...</p>
-    </div>
+        <!-- PROFILE VIEW -->
+        <div id="view-profile" class="view">
+            <div class="profile-card">
+                <h2>የግል መገለጫ (Profile)</h2>
+                <div class="info-row"><span>Telegram ID:</span> <span id="prof-tg-id">123456789</span></div>
+                <div class="info-row"><span>ስልክ ቁጥር (Telephone):</span> <span id="prof-phone">0928361886</span></div>
+                <div class="info-row"><span>ዋና ሂሳብ (Main Wallet):</span> <strong><span id="prof-main">0</span> ብር</strong></div>
+                <div class="info-row"><span>የመጫወቻ ሂሳብ (Play Wallet):</span> <strong><span id="prof-play">10</span> ብር</strong></div>
+            </div>
+        </div>
 
-    <!-- የታችኛው የኔቪጌชั่น ባር -->
-    <div class="navbar">
-        <button id="nav-game" class="nav-item active" onclick="switchTab('game')">🎮 Game</button>
-        <button id="nav-wallet" class="nav-item" onclick="switchTab('wallet')">💳 Wallet</button>
-        <button id="nav-history" class="nav-item" onclick="switchTab('history')">📜 History</button>
-        <button id="nav-profile" class="nav-item" onclick="switchTab('profile')">👤 Profile</button>
+    </div>
+	<!-- Bottom Navigation Bar -->
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="switchView('game')">Game</div>
+        <div class="nav-item" onclick="switchView('wallet')">Wallet</div>
+        <div class="nav-item" onclick="switchView('history')">History</div>
+        <div class="nav-item" onclick="switchView('profile')">Profile</div>
     </div>
 
     <script src="app.js"></script>
